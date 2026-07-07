@@ -43,23 +43,34 @@
     width: 100%; padding: 9px 10px; font-size: 14px; border: 1px solid var(--border);
     border-radius: 6px; background: #fff; color: var(--text);
   }
+  select:disabled, input:disabled { background: var(--bg); color: var(--gray); cursor: not-allowed; }
   select:focus, input:focus { outline: 2px solid var(--navy); outline-offset: -1px; }
   .checkbox-field { display: flex; align-items: center; gap: 8px; padding-top: 22px; }
   .checkbox-field label { font-size: 13px; color: var(--text-secondary); margin: 0; }
   .info-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 13px; }
 
-  .result { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-top: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .toggle-btn {
+    background: none; border: none; color: var(--navy); font-size: 13px; font-weight: 600;
+    cursor: pointer; padding: 12px 0 4px; display: flex; align-items: center; gap: 6px;
+  }
+  .toggle-btn .chevron { display: inline-block; transition: transform 0.2s ease; }
+  .toggle-btn.open .chevron { transform: rotate(90deg); }
+  #details-wrap { display: none; }
+
+  .result { background: #fff; border: 1px solid var(--border); border-top: 3px solid var(--navy); border-radius: 12px; padding: 20px 24px; margin-top: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .advisory-tag { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; margin: 0 0 10px; }
+  .reason-line { font-size: 13px; color: var(--navy-dark); margin: 0 0 14px; padding: 10px 14px; background: var(--bg); border-left: 3px solid var(--navy); border-radius: 0 6px 6px 0; }
   .cards-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   .card { background: var(--bg); border-radius: 8px; padding: 14px 16px; }
   .card-label { font-size: 12px; color: var(--text-secondary); margin: 0 0 8px; }
-  .badge { font-size: 13px; font-weight: 600; padding: 3px 11px; border-radius: 6px; display: inline-block; margin-bottom: 8px; }
+  .badge { font-size: 13px; font-weight: 600; padding: 3px 11px; border-radius: 6px; display: inline-block; margin-bottom: 8px; transition: background-color 0.2s ease, color 0.2s ease; }
   .card-value { font-size: 15px; font-weight: 600; margin: 0; color: var(--navy-dark); }
 
   .bars { display: flex; flex-direction: column; gap: 9px; margin: 16px 0; }
   .bar-row { font-size: 12px; }
   .bar-labels { display: flex; justify-content: space-between; color: var(--text-secondary); margin-bottom: 3px; }
   .bar-track { height: 6px; border-radius: 4px; background: var(--border); overflow: hidden; }
-  .bar-fill { height: 100%; }
+  .bar-fill { height: 100%; transition: width 0.4s ease; }
 
   .block { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
   .block-title { font-size: 13px; font-weight: 600; color: var(--navy-dark); margin: 0 0 8px; }
@@ -67,6 +78,10 @@
   ul.steps li { font-size: 13px; padding-left: 18px; position: relative; }
   ul.steps li::before { content: "✓"; position: absolute; left: 0; color: var(--navy); font-weight: 700; }
   .talk { font-size: 14px; font-style: italic; margin: 0; line-height: 1.6; color: var(--text); }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; background: var(--navy); color: #fff; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s ease; }
+  .btn:hover { background: var(--navy-dark); }
+  .btn:active { transform: scale(0.98); }
 
   footer { max-width: 880px; margin: 0 auto; padding: 0 24px 40px; font-size: 12px; color: var(--text-secondary); }
 </style>
@@ -80,9 +95,9 @@
 
 <main>
   <h1>Termin-Priorisierung</h1>
-  <p class="subtitle">Konzeptversion – Gewichte, Produktkategorie-Wertung und PLZ-Entfernungsschätzung sind Platzhalter und werden nach ersten echten Auswertungen kalibriert.</p>
+  <p class="subtitle">Kernfragen genügen für ein Ergebnis. Für eine genauere Einschätzung können weitere Angaben ergänzt werden.</p>
 
-  <div class="section-title">Termin-Dringlichkeit ermitteln</div>
+  <div class="section-title">Kernfragen</div>
   <div class="grid">
     <div class="field">
       <label for="sicherheit">Aktuelle Sicherheitslage</label>
@@ -102,23 +117,6 @@
       </select>
     </div>
     <div class="field">
-      <label for="wettbewerber_name">Bekannter Wettbewerber vor Ort <span>(informativ)</span></label>
-      <select id="wettbewerber_name" onchange="update()">
-        <option value="keiner" selected>Kein bekannter Wettbewerber</option>
-        <option value="liftstar">Liftstar</option>
-        <option value="lifta">Lifta</option>
-        <option value="hirolift">Hiro Lift</option>
-        <option value="handicare">Handicare</option>
-        <option value="encasa">ThyssenKrupp Encasa</option>
-        <option value="sanimed">Sanimed</option>
-        <option value="sonstiger">Sonstiger …</option>
-      </select>
-    </div>
-    <div class="field" id="wettbewerber-frei-wrap" style="display:none;">
-      <label for="wettbewerber_frei">Name des Wettbewerbers</label>
-      <input type="text" id="wettbewerber_frei" onchange="update()" oninput="update()" placeholder="z.B. Regionaler Anbieter XY">
-    </div>
-    <div class="field">
       <label for="anlass">Gibt es ein konkretes Datum/Anlass?</label>
       <select id="anlass" onchange="update()">
         <option value="ja">Ja, konkretes Datum bekannt</option>
@@ -131,49 +129,6 @@
       <input type="date" id="datum" onchange="update()">
     </div>
     <div class="field">
-      <label for="kontakt">Kontakthistorie</label>
-      <select id="kontakt" onchange="update()">
-        <option value="erst" selected>Erstkontakt heute</option>
-        <option value="mehrfach">Bereits mehrfach kontaktiert, kein Termin</option>
-        <option value="verschoben">Termin bereits einmal verschoben</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="entscheider">Entscheiderverfügbarkeit</label>
-      <select id="entscheider" onchange="update()">
-        <option value="verfuegbar" selected>Alle Entscheider zeitnah verfügbar</option>
-        <option value="nicht_verfuegbar">Nicht alle verfügbar / muss abgestimmt werden</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="pflegegrad">Pflegegrad vorhanden?</label>
-      <select id="pflegegrad" onchange="update()">
-        <option value="ja">Ja, vorhanden</option>
-        <option value="beantragt">Beantragt, Bescheid steht aus</option>
-        <option value="nein" selected>Nein, nicht vorhanden</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="pflegezuschuss">Pflegezuschuss beantragt/vorhanden?</label>
-      <select id="pflegezuschuss" onchange="update()">
-        <option value="ja">Ja</option>
-        <option value="nein" selected>Nein</option>
-        <option value="unbekannt">Unbekannt</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="section-title">Kundenwert</div>
-  <div class="grid">
-    <div class="field">
-      <label for="kundentyp">Kundentyp</label>
-      <select id="kundentyp" onchange="update()">
-        <option value="privat" selected>Privatperson</option>
-        <option value="architekt">Architekt/Planer</option>
-        <option value="oeffentlich">Öffentliche Einrichtung</option>
-      </select>
-    </div>
-    <div class="field">
       <label for="produktkategorie">Produktkategorie <span>(Gewichtung nach Umsatzanteil, Platzhalter)</span></label>
       <select id="produktkategorie" onchange="update()">
         <option value="treppenlift" selected>Treppenlift</option>
@@ -184,55 +139,128 @@
       </select>
     </div>
     <div class="field">
-      <label for="anfragequelle">Anfragequelle</label>
-      <select id="anfragequelle" onchange="update()">
-        <option value="direkt" selected>Direktanfrage</option>
-        <option value="partner">Über Partner/Vermittler</option>
+      <label for="pflegegrad">Pflegegrad vorhanden?</label>
+      <select id="pflegegrad" onchange="onPflegegradChange()">
+        <option value="ja">Ja, vorhanden</option>
+        <option value="beantragt">Beantragt, Bescheid steht aus</option>
+        <option value="nein" selected>Nein, nicht vorhanden</option>
       </select>
     </div>
-    <div class="field">
-      <label for="eigentum">Eigentumssituation</label>
-      <select id="eigentum" onchange="update()">
-        <option value="eigentuemer" selected>Eigentümer, selbst wohnhaft</option>
-        <option value="vermieter">Vermieter (nicht selbst wohnhaft)</option>
-        <option value="mieter">Mieter</option>
-      </select>
+    <div class="field" id="bescheid-datum-wrap" style="display:none;">
+      <label for="bescheid_datum">Bescheid erwartet am <span>(optional, für Wiedervorlage)</span></label>
+      <input type="date" id="bescheid_datum" onchange="update()">
     </div>
   </div>
 
-  <div class="section-title">Logistikaufwand <span>(echte Fahrstrecke via OpenStreetMap-Routing, Internetverbindung erforderlich; Zonen-Schätzung als Fallback)</span></div>
-  <div class="grid">
-    <div class="field">
-      <label for="plz_kunde">PLZ des Kunden</label>
-      <input type="text" id="plz_kunde" maxlength="5" placeholder="z.B. 50667" onchange="autofillFromPlz()" oninput="onPlzInput()">
+  <button class="toggle-btn" id="toggle-details" onclick="toggleDetails()">
+    <span class="chevron">›</span> Weitere Angaben für eine genauere Einschätzung
+  </button>
+
+  <div id="details-wrap">
+    <div class="section-title">Erweiterte Angaben</div>
+    <div class="grid">
+      <div class="field">
+        <label for="wettbewerber_name">Bekannter Wettbewerber vor Ort <span>(informativ)</span></label>
+        <select id="wettbewerber_name" onchange="update()">
+          <option value="keiner" selected>Kein bekannter Wettbewerber</option>
+          <option value="liftstar">Liftstar</option>
+          <option value="lifta">Lifta</option>
+          <option value="hirolift">Hiro Lift</option>
+          <option value="handicare">Handicare</option>
+          <option value="encasa">ThyssenKrupp Encasa</option>
+          <option value="sanimed">Sanimed</option>
+          <option value="sonstiger">Sonstiger …</option>
+        </select>
+      </div>
+      <div class="field" id="wettbewerber-frei-wrap" style="display:none;">
+        <label for="wettbewerber_frei">Name des Wettbewerbers</label>
+        <input type="text" id="wettbewerber_frei" onchange="update()" oninput="update()" placeholder="z.B. Regionaler Anbieter XY">
+      </div>
+      <div class="field">
+        <label for="kontakt">Kontakthistorie</label>
+        <select id="kontakt" onchange="update()">
+          <option value="erst" selected>Erstkontakt heute</option>
+          <option value="mehrfach">Bereits mehrfach kontaktiert, kein Termin</option>
+          <option value="verschoben">Termin bereits einmal verschoben</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="entscheider">Entscheiderverfügbarkeit</label>
+        <select id="entscheider" onchange="update()">
+          <option value="verfuegbar" selected>Alle Entscheider zeitnah verfügbar</option>
+          <option value="nicht_verfuegbar">Nicht alle verfügbar / muss abgestimmt werden</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="pflegezuschuss">Pflegezuschuss beantragt/vorhanden? <span id="pflegezuschuss-note"></span></label>
+        <select id="pflegezuschuss" onchange="update()">
+          <option value="ja">Ja</option>
+          <option value="nein" selected>Nein</option>
+          <option value="unbekannt">Unbekannt</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="kundentyp">Kundentyp</label>
+        <select id="kundentyp" onchange="update()">
+          <option value="privat" selected>Privatperson</option>
+          <option value="architekt">Architekt/Planer</option>
+          <option value="oeffentlich">Öffentliche Einrichtung</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="anfragequelle">Anfragequelle</label>
+        <select id="anfragequelle" onchange="update()">
+          <option value="direkt" selected>Direktanfrage</option>
+          <option value="partner">Über Partner/Vermittler</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="eigentum">Eigentumssituation</label>
+        <select id="eigentum" onchange="update()">
+          <option value="eigentuemer" selected>Eigentümer, selbst wohnhaft</option>
+          <option value="vermieter">Vermieter (nicht selbst wohnhaft)</option>
+          <option value="mieter">Mieter</option>
+        </select>
+      </div>
     </div>
-    <div class="field">
-      <label for="plz_adm">PLZ Außendienstmitarbeiter</label>
-      <input type="text" id="plz_adm" maxlength="5" value="59846" onchange="autofillFromPlz()" oninput="onPlzInput()">
-    </div>
-    <div class="field">
-      <label for="plz_zentrale">PLZ Zentrale (Sundern)</label>
-      <input type="text" id="plz_zentrale" maxlength="5" value="59846" onchange="autofillFromPlz()" oninput="onPlzInput()">
-    </div>
-    <div class="field">
-      <label for="tour">Passt der Termin in eine geplante Tour der Region?</label>
-      <select id="tour" onchange="update()">
-        <option value="ja">Ja, passt gut</option>
-        <option value="unsicher" selected>Teilweise/unsicher</option>
-        <option value="nein">Nein</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="km_adm">Entfernung ADM (km) <span>(auto, überschreibbar)</span></label>
-      <input type="number" id="km_adm" min="0" value="25" onchange="update()" oninput="update()">
-    </div>
-    <div class="field">
-      <label for="km_zentrale">Entfernung Zentrale (km) <span>(auto, überschreibbar)</span></label>
-      <input type="number" id="km_zentrale" min="0" value="60" onchange="update()" oninput="update()">
+
+    <div class="section-title">Logistikaufwand <span>(echte Fahrstrecke via OpenStreetMap-Routing, Internetverbindung erforderlich; Zonen-Schätzung als Fallback)</span></div>
+    <div class="grid">
+      <div class="field">
+        <label for="plz_kunde">PLZ des Kunden</label>
+        <input type="text" id="plz_kunde" maxlength="5" placeholder="z.B. 50667" onchange="autofillFromPlz()" oninput="onPlzInput()">
+      </div>
+      <div class="field">
+        <label for="plz_adm">PLZ Außendienstmitarbeiter</label>
+        <input type="text" id="plz_adm" maxlength="5" value="59846" onchange="autofillFromPlz()" oninput="onPlzInput()">
+      </div>
+      <div class="field">
+        <label for="plz_zentrale">PLZ Zentrale (Sundern)</label>
+        <input type="text" id="plz_zentrale" maxlength="5" value="59846" onchange="autofillFromPlz()" oninput="onPlzInput()">
+      </div>
+      <div class="field">
+        <label for="tour">Passt der Termin in eine geplante Tour der Region?</label>
+        <select id="tour" onchange="update()">
+          <option value="ja">Ja, passt gut</option>
+          <option value="unsicher" selected>Teilweise/unsicher</option>
+          <option value="nein">Nein</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="km_adm">Entfernung ADM (km) <span>(auto, überschreibbar)</span></label>
+        <input type="number" id="km_adm" min="0" value="25" onchange="update()" oninput="update()">
+      </div>
+      <div class="field">
+        <label for="km_zentrale">Entfernung Zentrale (km) <span>(auto, überschreibbar)</span></label>
+        <input type="number" id="km_zentrale" min="0" value="60" onchange="update()" oninput="update()">
+      </div>
     </div>
   </div>
 
   <div class="result">
+    <p class="advisory-tag">Empfehlung – du entscheidest</p>
+    <p class="reason-line" id="reason-line"></p>
+
     <div id="wettbewerber-hinweis" class="info-box" style="display:none;"></div>
     <div id="pflegegrad-hinweis" class="info-box" style="display:none;"></div>
 
@@ -266,6 +294,10 @@
       <p class="block-title">Gesprächsleitfaden</p>
       <p class="talk" id="talk"></p>
     </div>
+
+    <div class="block">
+      <button class="btn" id="copy-btn" onclick="copySummary()">In Zwischenablage kopieren</button>
+    </div>
   </div>
 </main>
 
@@ -292,6 +324,14 @@ const wettbewerberLabels = {
   liftstar: 'Liftstar', lifta: 'Lifta', hirolift: 'Hiro Lift',
   handicare: 'Handicare', encasa: 'ThyssenKrupp Encasa', sanimed: 'Sanimed'
 };
+
+const sicherheitReason = { gesperrt: 'Zugang/Stockwerk bereits nicht mehr nutzbar', sturzrisiko: 'Sturzrisiko bei der Treppennutzung', unproblematisch: 'Keine akute Sicherheitslage' };
+const anlassReason = { ja: 'Konkreter Termin/Anlass in Kürze', bald: 'Baldiger Bedarf gewünscht', nein: 'Kein zeitlicher Druck erkennbar' };
+const wettbewerbReason = { frueh: 'Wettbewerber bereits in unter 3 Tagen vor Ort', spaeter: 'Wettbewerber in 1–2 Wochen vor Ort', angefragt: 'Kunde hat weitere Anbieter angefragt', keine: 'Keine bekannte Konkurrenzsituation' };
+const kontaktReason = { verschoben: 'Termin wurde bereits einmal verschoben', mehrfach: 'Bereits mehrfach kontaktiert ohne Termin', erst: '' };
+const pflegezuschussReason = { ja: 'Pflegezuschuss vorhanden – Kunde entscheidet oft schnell', nein: '', unbekannt: '' };
+
+let lastResult = {};
 
 function bandOf(score) {
   if (score >= 70) return 'hoch';
@@ -454,6 +494,61 @@ async function autofillFromPlz() {
   update();
 }
 
+function toggleDetails() {
+  const wrap = document.getElementById('details-wrap');
+  const btn = document.getElementById('toggle-details');
+  const isOpen = wrap.style.display === 'block';
+  wrap.style.display = isOpen ? 'none' : 'block';
+  btn.classList.toggle('open', !isOpen);
+}
+
+function onPflegegradChange() {
+  const pflegegrad = document.getElementById('pflegegrad').value;
+  document.getElementById('bescheid-datum-wrap').style.display = pflegegrad === 'beantragt' ? 'block' : 'none';
+
+  const pflegezuschussEl = document.getElementById('pflegezuschuss');
+  const noteEl = document.getElementById('pflegezuschuss-note');
+  if (pflegegrad === 'nein') {
+    pflegezuschussEl.value = 'nein';
+    pflegezuschussEl.disabled = true;
+    noteEl.textContent = '(nicht möglich ohne Pflegegrad)';
+  } else {
+    pflegezuschussEl.disabled = false;
+    noteEl.textContent = '';
+  }
+  update();
+}
+
+async function copySummary() {
+  const r = lastResult;
+  const text = [
+    `Termin-Dringlichkeit: ${r.dringLabel} – ${r.zeitfenster}`,
+    `Hauptgrund: ${r.reason}`,
+    `Kundenwert: ${r.wertLabel} – ${r.betreuung}`,
+    `Logistik: ${r.logistikNote}`,
+    '',
+    'Nächste Schritte:',
+    ...r.steps.map(s => `- ${s}`),
+    '',
+    `Gesprächsleitfaden: ${r.talk}`
+  ].join('\n');
+
+  const btn = document.getElementById('copy-btn');
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  const original = btn.textContent;
+  btn.textContent = 'Kopiert!';
+  setTimeout(() => { btn.textContent = original; }, 1500);
+}
+
 function update() {
   const anlass = document.getElementById('anlass').value;
   document.getElementById('datum-wrap').style.display = anlass === 'ja' ? 'block' : 'none';
@@ -467,6 +562,7 @@ function update() {
   const entscheider = document.getElementById('entscheider').value;
   const pflegegrad = document.getElementById('pflegegrad').value;
   const pflegezuschuss = document.getElementById('pflegezuschuss').value;
+  const bescheidDatum = document.getElementById('bescheid_datum').value;
   const kundentyp = document.getElementById('kundentyp').value;
   const produktkategorie = document.getElementById('produktkategorie').value;
   const anfragequelle = document.getElementById('anfragequelle').value;
@@ -546,9 +642,10 @@ function update() {
 
   const zeitfensterMap = { hoch: 'Termin in 2–3 Werktagen', mittel: 'Termin in 7–10 Tagen', niedrig: 'Termin in 14–21 Tagen' };
   const sonderfahrt = dringBand === 'hoch' && logistikBand === 'hoch';
-  document.getElementById('zeitfenster').textContent = sonderfahrt
+  const zeitfensterText = sonderfahrt
     ? 'Regulär 7–10 Tage – Express nur als Sonderfahrt (Genehmigung nötig)'
     : zeitfensterMap[dringBand];
+  document.getElementById('zeitfenster').textContent = zeitfensterText;
 
   const logistikNoteMap = {
     niedrig: `${effKm} km (geschätzte Straßenentfernung ADM/Zentrale) – auch spontan gut einplanbar`,
@@ -556,13 +653,24 @@ function update() {
     hoch: `${effKm} km – nur mit Tourbündelung wirtschaftlich, Einzelfahrt kostenintensiv`
   };
   const tourSuffix = { ja: ' (passt in geplante Tour)', unsicher: ' (Tourpassung unsicher – prüfen)', nein: ' (keine passende Tour bekannt)' }[tour];
-  document.getElementById('logistik-note').textContent = logistikNoteMap[logistikBand] + tourSuffix;
+  const logistikNoteText = logistikNoteMap[logistikBand] + tourSuffix;
+  document.getElementById('logistik-note').textContent = logistikNoteText;
 
   let talk;
   if (dringBand === 'hoch') talk = '„Aufgrund Ihrer Angaben können wir Ihnen kurzfristig einen Termin anbieten – meist innerhalb von 2–3 Werktagen. Ich kümmere mich direkt persönlich darum.“';
   else if (dringBand === 'mittel') talk = '„Wir planen Ihren Termin sorgfältig und können Ihnen in der Regel innerhalb von 7 bis 10 Tagen einen Termin anbieten. Bis dahin halte ich Sie über den Status auf dem Laufenden.“';
   else talk = '„Da aktuell keine akute Dringlichkeit besteht, nehmen wir uns etwas mehr Zeit für eine sorgfältige Planung. In der Zwischenzeit schicke ich Ihnen gerne schon Informationen und Referenzen zu.“';
   document.getElementById('talk').textContent = talk;
+
+  const reasonCandidates = [
+    { score: sicherheitScore[sicherheit], text: sicherheitReason[sicherheit] },
+    { score: anlassScore, text: anlassReason[anlass] },
+    { score: wettbewerbScore[wettbewerb], text: wettbewerbReason[wettbewerb] },
+    { score: kontaktScore[kontakt], text: kontaktReason[kontakt] },
+    { score: pflegezuschussBonus[pflegezuschuss], text: pflegezuschussReason[pflegezuschuss] }
+  ].filter(c => c.text);
+  const topReason = reasonCandidates.reduce((a, b) => (b.score > a.score ? b : a), { score: -1, text: 'Keine besonderen Auffälligkeiten – Standardablauf' });
+  document.getElementById('reason-line').textContent = `Hauptgrund: ${topReason.text}`;
 
   const bars = [
     { label: 'Sicherheitslage', score: sicherheitScore[sicherheit], max: 35, color: '#0F6E56' },
@@ -588,12 +696,28 @@ function update() {
   if (kontakt === 'verschoben') steps.push('Vertrauensbildende Geste anbieten – Termin wurde bereits einmal verschoben');
   if (entscheider === 'nicht_verfuegbar') steps.push('Termin erst nach Abstimmung aller Entscheider fixieren, vorab Infomaterial für das Abstimmungsgespräch senden');
   if (pflegegrad === 'nein') steps.push('Kunden über Beantragung eines Pflegegrads informieren, ggf. Unterstützung/Formular anbieten');
+  if (pflegegrad === 'beantragt' && bescheidDatum) {
+    const formatted = new Date(bescheidDatum).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    steps.push(`Nachfassen ab ${formatted}: Status des Pflegegrad-Bescheids prüfen`);
+  }
   if (eigentum === 'vermieter') steps.push('Terminkoordination mit dem tatsächlichen Bewohner/Mieter vor Ort sicherstellen');
   if (dringBand === 'niedrig') steps.push('Tag 5–7: Content-Mail mit Vorbereitungs-Checkliste und Kundenstimmen zur Überbrückung der Wartezeit');
   steps.push('Kurz vor dem Termin: Reminder inkl. Vorstellung des Beraters (Name/Foto)');
 
   document.getElementById('steps').innerHTML = steps.map(s => `<li>${s}</li>`).join('');
+
+  lastResult = {
+    dringLabel: semantics[dringBand].label,
+    zeitfenster: zeitfensterText,
+    wertLabel: semantics[wertBand].label,
+    betreuung: betreuungMap[wertBand],
+    logistikNote: logistikNoteText,
+    reason: topReason.text,
+    steps: steps,
+    talk: talk
+  };
 }
+onPflegegradChange();
 autofillFromPlz();
 </script>
 
